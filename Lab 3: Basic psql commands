@@ -1,0 +1,26 @@
+Server [localhost]:
+Database [postgres]:
+Port [5432]:
+Username [postgres]:
+Password for user postgres:
+psql (17.6)
+WARNING: Console code page (866) differs from Windows code page (1251)
+         8-bit characters might not work correctly. See psql reference
+         page "Notes for Windows users" for details.
+Type "help" for help.
+
+postgres=# CREATE TABLE students (id SERIAL PRIMARY KEY, name VARCHAR(100), age INT);
+CREATE TABLE
+postgres=# INSERT INTO students (name, age) VALUES ('Alice', 21), ('Bob', 23);
+INSERT 0 2
+postgres=# SELECT * FROM students;
+ id | name  | age
+----+-------+-----
+  1 | Alice |  21
+  2 | Bob   |  23
+(2 rows)
+
+
+postgres=# DROP TABLE students;
+DROP TABLE
+postgres=# \q
