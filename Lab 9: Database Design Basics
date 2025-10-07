@@ -1,0 +1,182 @@
+Server [localhost]:
+Database [postgres]:
+Port [5432]:
+Username [postgres]:
+Password for user postgres:
+psql (17.6)
+WARNING: Console code page (866) differs from Windows code page (1251)
+         8-bit characters might not work correctly. See psql reference
+         page "Notes for Windows users" for details.
+Type "help" for help.
+
+postgres=# --NORMAL FORMS
+postgres=# --Violation of 1NF
+postgres=# CREATE TABLE students_bad (student_id INT PRIMARY KEY, name VARCHAR(100), phone_numbers TEXT);
+CREATE TABLE
+postgres=# --The previous example is bad because multiple phone numbers in one column
+postgres=# --Following of 1NF
+postgres=# CREATE TABLE students (students_id INT PRIMARY KEY, name VARCHAR(100));
+CREATE TABLE
+postgres=# -- The previous table is good because of atomic values
+postgres=# CREATE TABLE student_phones (student_id INT, phone_number VARCHAR(15), phone_type VARCHAR(20), PRIMARY KEY (student_id, phone_number), FOREIGN KEY (student_id) REFERENCES students(student_id));
+ERROR:  column "student_id" referenced in foreign key constraint does not exist
+postgres=# CREATE TABLE student_phones (student_id INT, phone_number VARCHAR(15), phone_type VARCHAR(20), PRIMARY KEY (student_id, phone_number), FOREIGN KEY (student_id) REFERENCES students(students_id));
+CREATE TABLE
+postgres=# \d
+             List of relations
+ Schema |      Name      | Type  |  Owner
+--------+----------------+-------+----------
+ public | student_phones | table | postgres
+ public | students       | table | postgres
+ public | students_bad   | table | postgres
+(3 rows)
+
+
+postgres=# DROP TABLE student_phones;
+DROP TABLE
+postgres=# DROP TABLE students;
+DROP TABLE
+postgres=# DROP TABLE students_bad;
+DROP TABLE
+postgres=# \d
+Did not find any relations.
+postgres=# --Violation of 2NF
+postgres=# CREATE TABLE students (student_id INT PRIMARY KEY, name VARCHAR(100));
+CREATE TABLE
+postgres=# CREATE TABLE enrollments_bad (student_id INT, course_id INT, course_name VARCHAR(100), grade CHAR(2), PRIMARY KEY (student_id, course_id));
+CREATE TABLE
+postgres=# -- BAD: course_name depends only on course_id, not on the full primary key
+postgres=# -- GOOD example of 2NF
+postgres=# CREATE TABLE courses (course_id INT PRIMARY KEY, course_name VARCHAR(100), creadits INT);
+CREATE TABLE
+postgres=# CREATE TABLE enrollments (student_id INT, course_id INT, grade CHAR(2), PRIMARY KEY (student_id, course_id), FOREIGN KEY (student_id) REFERENCES students(student_id), FOREIGN KEY (course_id) REFERENCES courses(course_id));
+CREATE TABLE
+postgres=# -- This way tables are separate and will have logical flow when initializing instances
+postgres=# \d
+              List of relations
+ Schema |      Name       | Type  |  Owner
+--------+-----------------+-------+----------
+ public | courses         | table | postgres
+ public | enrollments     | table | postgres
+ public | enrollments_bad | table | postgres
+ public | students        | table | postgres
+(4 rows)
+
+
+postgres=# DROP TABLE enrollments;
+DROP TABLE
+postgres=# DROP TABLE courses;
+DROP TABLE
+postgres=# DROP TABLE students;
+DROP TABLE
+postgres=# DROP TABLE enrollments_bad;
+DROP TABLE
+postgres=# \d
+Did not find any relations.
+postgres=# -3NF: Must be like 2NF; No transitive dependencies (non-key attributes shouldn't depend on other non-key attributes)
+ERROR:  syntax error at or near "-"
+LINE 1: -3NF: Must be like 2NF;
+        ^
+postgres'# --3NF: Must be like 2NF; No transitive dependencies (non-key attributes shouldn't depend on other non-key attributes)
+postgres-# -- Violation of 3NF
+postgres-# CREATE TABLE students_bad (student_id INT PRIMARY KEY, name VARCHAR(100), deparment_id INT, department_name VARCHAR(100));
+ERROR:  syntax error at or near "No"
+LINE 1: No transitive dependencies (non-key attributes shouldn't dep...
+        ^
+postgres=# CREATE TABLE students_bad (student_id INT PRIMARY KEY, name VARCHAR(100), deparment_id INT, department_name VARCHAR(100));
+CREATE TABLE
+postgres=# -- TABLE students_bad is bad because deparment_name is a transitive dependency
+postgres=# -- Following 3NF
+postgres=# CREATE TABLE departments (department_id INT PRIMARY KEY, department_name VARCHAR(100), deparment_head VARCHAR(100));
+CREATE TABLE
+postgres=# CREATE TABLE students(student_id INT PRIMARY KEY, name VARCHAR(100), deparment_id INT, FOREIGN KEY (department_id) REFERENCES departments(department_id));
+ERROR:  column "department_id" referenced in foreign key constraint does not exist
+postgres=# CREATE TABLE students(student_id INT PRIMARY KEY, name VARCHAR(100), department_id INT, FOREIGN KEY (department_id) REFERENCES departments(department_id));
+CREATE TABLE
+postgres=# \в
+invalid command \ў
+Try \? for help.
+postgres=# \d
+            List of relations
+ Schema |     Name     | Type  |  Owner
+--------+--------------+-------+----------
+ public | departments  | table | postgres
+ public | students     | table | postgres
+ public | students_bad | table | postgres
+(3 rows)
+
+
+postgres=# DROP TABLE students;
+DROP TABLE
+postgres=# DROP TABLE departments;
+DROP TABLE
+postgres=# DROP TABLE deparments_bad;
+ERROR:  table "deparments_bad" does not exist
+postgres=# DROP TABLE students_bad;
+DROP TABLE
+postgres=# \d
+Did not find any relations.
+postgres=# -- Database design process
+postgres=# CREATE TABLE authors (author_id SERIAL PRIMARY KEY, first_name VARCHAR(50) NOT NULL, last_name VARCHAR(50) NOT NULL, isbn VARCHAR(13) UNIQUE, publication_year INTEGER, available_copies INTEGER DEFAULT 1);
+CREATE TABLE
+postgres=# DROP TABLE authors;
+DROP TABLE
+postgres=# CREATE TABLE authors (author_id SERIAL PRIMARY KEY, first_name VARCHAR(50) NOT NULL, last_name VARCHAR(50) NOT NULL, birth_date DATE);
+CREATE TABLE
+postgres=# CREATE TABLE books (book_id SERIAL PRIMARY KEY, title VARCHAR(200) NOT NULL, isbn VARCHAR(13) UNIQUE, publication_year INTEGER, available_copies INTEGER DEFAULT 1);
+CREATE TABLE
+postgres=# CREATE TABLE book_authors (book_id INTEGER, author_id INTEGER, PRIMARY KEY (book_id, author_id), FOREIGN KEY (book_id) REFERENCES books(book_id));
+CREATE TABLE
+postgres=# DROP TABLE book_authors;
+DROP TABLE
+postgres=# CREATE TABLE book_authors (book_id INTEGER, author_id INTEGER, PRIMARY KEY (book_id, author_id), FOREIGN KEY (book_id) REFERENCES books(book_id), FOREIGN KEY (author_id) REFERENCES authors(author_id));
+CREATE TABLE
+postgres=# CREATE TABLE members (member_id SERIAL PRIMARY KEY, first_name VARCHAR(50) NOT NULL, last_name VARCHAR(50) NOT NULL, email VARCHAR(100) UNIQUE NOT NULL, phone VARCHAR(15), membership_date DATE DEFAULT CURRENT_DATE);
+CREATE TABLE
+postgres=# CREATE TABLE loans (loan_id SERIAL PRIMARY KEY, member_id INTEGER NOT NULL, book_id INTEGER NOT NULL, loan_date DATE DEFAULT CURRENT_DATE, due_date DATE NOT NULL, return_date DATE, late_fee DECIMAL (10, 2) DEFAULT 0.00, FOREIGN KEY (member_id) REFERENCES members(member_id), FOREIGN KEY (book_id) REFERENCES books(book_id));
+CREATE TABLE
+postgres=# \d
+                  List of relations
+ Schema |         Name          |   Type   |  Owner
+--------+-----------------------+----------+----------
+ public | authors               | table    | postgres
+ public | authors_author_id_seq | sequence | postgres
+ public | book_authors          | table    | postgres
+ public | books                 | table    | postgres
+ public | books_book_id_seq     | sequence | postgres
+ public | loans                 | table    | postgres
+ public | loans_loan_id_seq     | sequence | postgres
+ public | members               | table    | postgres
+ public | members_member_id_seq | sequence | postgres
+(9 rows)
+
+
+postgres=# DROP TABLE loans;
+DROP TABLE
+postgres=# DROP TABLE members;
+DROP TABLE
+postgres=# DROP TABLE books;
+ERROR:  cannot drop table books because other objects depend on it
+DETAIL:  constraint book_authors_book_id_fkey on table book_authors depends on table books
+HINT:  Use DROP ... CASCADE to drop the dependent objects too.
+postgres=# \d
+                  List of relations
+ Schema |         Name          |   Type   |  Owner
+--------+-----------------------+----------+----------
+ public | authors               | table    | postgres
+ public | authors_author_id_seq | sequence | postgres
+ public | book_authors          | table    | postgres
+ public | books                 | table    | postgres
+ public | books_book_id_seq     | sequence | postgres
+(5 rows)
+
+
+postgres=# DROP TABLE book_authors;
+DROP TABLE
+postgres=# DROP TABLE books;
+DROP TABLE
+postgres=# DROP TABLE authors;
+DROP TABLE
+postgres=# \d
+Did not find any relations.
+postgres=#
