@@ -1,0 +1,95 @@
+SQL Lab: Aggregate Functions Practice
+
+1. COUNT() - Counting Rows
+--------------------------
+SELECT COUNT(*) AS total_employees 
+FROM employees;
+
+SELECT COUNT(email) AS employees_with_email 
+FROM employees;
+
+SELECT COUNT(DISTINCT department) AS unique_departments 
+FROM employees;
+
+
+2. SUM() - Calculating Totals
+-----------------------------
+SELECT SUM(salary) AS total_salaries 
+FROM employees;
+
+SELECT department, SUM(sales_amount) AS total_sales
+FROM sales_data
+GROUP BY department;
+
+
+3. AVG() - Calculating Averages
+-------------------------------
+SELECT AVG(salary) AS average_salary 
+FROM employees;
+
+SELECT department, AVG(age) AS avg_age
+FROM employees
+GROUP BY department;
+
+
+4. MAX() and MIN() - Finding Extremes
+-------------------------------------
+SELECT 
+    MAX(salary) AS highest_salary,
+    MIN(salary) AS lowest_salary
+FROM employees;
+
+SELECT department, MAX(hire_date) AS latest_hire
+FROM employees
+GROUP BY department;
+
+
+5. STRING_AGG() - Concatenating Strings
+---------------------------------------
+SELECT department, STRING_AGG(first_name, ', ') AS employee_names
+FROM employees
+GROUP BY department;
+
+SELECT employee_id, STRING_AGG(skill_name, ', ' ORDER BY skill_name) AS skills
+FROM employee_skills
+GROUP BY employee_id;
+
+
+6. ARRAY_AGG() - Creating Arrays
+--------------------------------
+SELECT department, ARRAY_AGG(salary) AS salary_array
+FROM employees
+GROUP BY department;
+
+SELECT department, ARRAY_AGG(first_name ORDER BY last_name) AS employees
+FROM employees
+GROUP BY department;
+
+
+7. Statistical Aggregate Functions
+----------------------------------
+SELECT 
+    department,
+    STDDEV(salary) AS salary_std_dev,
+    VARIANCE(salary) AS salary_variance
+FROM employees
+GROUP BY department;
+
+SELECT CORR(experience_years, salary) AS experience_salary_correlation
+FROM employees;
+
+
+8. GROUP BY Examples
+-------------------
+SELECT 
+    category,
+    COUNT(*) AS number_of_products,
+    SUM(price) AS total_value,
+    AVG(price) AS average_price
+FROM products
+GROUP BY category;
+
+SELECT 
+    EXTRACT(YEAR FROM sale_date) AS year,
+    EXTRACT(QUARTER FROM sale_date) AS quarter,
+    COUNT(*) AS total_sales,
